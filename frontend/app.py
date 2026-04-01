@@ -1,37 +1,37 @@
 import streamlit as st
-from components.movie_cards import render_movie_card
-from assets.styles import apply_styles          
-from utils import show_sidebar_mascot   
+from assets.styles import apply_styles
 
-st.set_page_config(page_title="Cinemind",layout="wide")
+# Главный файл, работа с окнами(Тут пока что Шапка сайта)
+
+# Конфигурация (сайдбар изначально закрыт, а CSS его добьет)
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
+
 apply_styles()
-show_sidebar_mascot()
 
-st.title("🎬 Cinemind 🎬")
-search_query = st.text_input("Поиск фильма по названию...", placeholder="Например: Дюна")
+home = st.Page("pages/01_Home.py", title="Главная", default=True)
+catalog = st.Page("pages/02_Catalog.py", title="Каталог")
+assistant = st.Page("pages/03_Assistant.py", title="Ассистент")
+profile = st.Page("pages/04_Profile.py", title="Профиль") # В дальнейшем будет скрыто
+details = st.Page("pages/05_Details.py", title="Детали") # В дальнейшем будет скрыто
 
-st.subheader("🔥 Премьеры недели")
+pg = st.navigation([home, catalog, assistant, profile, details], position="hidden")
 
-titles = ["Человек-паук: Возвращение домой", "Вонка", "Игра престолов", "Во все тяжкие"]
-posters = [
-    "https://upload.wikimedia.org/wikipedia/ru/5/5a/Spider-Man_Homecoming_logo.jpg",
-    "https://upload.wikimedia.org/wikipedia/ru/thumb/9/95/Wonka_%28film%2C_2023%29.jpg/500px-Wonka_%28film%2C_2023%29.jpg",
-    "https://upload.wikimedia.org/wikipedia/ru/4/49/Game_of_Thrones.jpg",
-    "https://avatars.mds.yandex.net/get-kinopoisk-image/1600647/0485e770-2e82-4a39-a97e-9bcc5abcc421/3840x"
-]
-cols = st.columns(4)
+with st.container():
+    col1, col2, col3 = st.columns([1, 4, 1])
+    
+    with col1:
+        with col1:
+            with st.popover("📂 Меню навигации"):
+                st.page_link("pages/01_Home.py", label="Главная", icon="🏠")
+                st.page_link("pages/02_Catalog.py", label="Каталог", icon="🎬")
+                st.page_link("pages/03_Assistant.py", label="Кинокотик", icon="🐱")
+                st.page_link("pages/04_Profile.py", label="Профиль") # В дальнейшем будет скрыто
+                st.page_link("pages/05_Details.py", label="Детали") # В дальнейшем будет скрыто
 
-for i, col in enumerate(cols):
-    with col:
-        render_movie_card(
-            title=titles[i], 
-            img_url=posters[i], 
-            genre="🍿 Скоро", 
-            year="2026"
-        )
+    with col2:
+        search_query = st.text_input("", placeholder="Поиск фильма по названию...  |  Например: Дюна", label_visibility="collapsed")
 
-# Новости
-st.divider()
-st.subheader("📰 Новости кино")
-st.write("— Объявлена дата выхода нового сезона 'Истребителя демонов'!")
-st.write("— Режиссер Кристофер Нолан работает над новым секретным проектом.")
+    with col3:
+        st.button("Профиль")
+
+pg.run()
