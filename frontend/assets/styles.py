@@ -5,6 +5,37 @@ def apply_styles():
     
     style_html = """
     <style>
+
+        /* Полностью скрываем сайдбар и кнопку его открытия */
+        [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] {
+            display: none !important;
+        }
+
+        /* Убираем лишние отступы сверху, чтобы шапка была вплотную */
+        .stAppHeader {
+            display: none;
+        }
+        
+        /* Шапка сайта */
+        .nav-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 1000;
+            border-bottom: 2px solid #e50914; /* Красная линия в стиле онлайн-кинотеатра */
+        }
+
+        .main-content {
+            margin-top: 100px;
+        }
+
         /* Анимация появления */
         .stApp {
             animation: fadeIn 0.8s ease-out;
@@ -69,6 +100,7 @@ def apply_styles():
             background-color: #ff0f1a !important;
             transform: scale(1.02);
         }
+        
     </style>
     """
     
