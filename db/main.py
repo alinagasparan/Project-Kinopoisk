@@ -1,10 +1,11 @@
-from db import get_connection
+import db
+from db import user_register
 
-conn = get_connection()
+conn = db.get_connection()
 cur = conn.cursor()
 
-cur.execute("SELECT * FROM actor LIMIT 5;")
-print(cur.fetchall())
+#cur.execute("SELECT * FROM film LIMIT 5;")
+print(db.get_count(conn, "film"))
 
 cur.close()
 conn.close()
