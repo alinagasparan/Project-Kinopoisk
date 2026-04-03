@@ -9,7 +9,6 @@ df = pd.read_csv('../movies.csv')
 df = df.dropna(subset=['overview'])
 
 
-print("🔹 Преобразуем описания фильмов в векторы...")
 movie_embeddings = model.encode(df['overview'].tolist(), show_progress_bar=True)
 
 
@@ -28,7 +27,7 @@ while True:
     
     top_indices = scores.argsort()[-5:][::-1]
     
-    print("\n🎬 Топ-5 фильмов по смыслу:\n")
+    print("\n Топ-5 фильмов по смыслу:\n")
     for rank, i in enumerate(top_indices, 1):
         row = df.iloc[i]
         print(f"{rank}. {row['title']} ({row['release_date']}) |  {row['vote_average']} |  {row['popularity']}")
