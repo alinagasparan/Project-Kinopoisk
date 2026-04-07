@@ -24,9 +24,10 @@ with st.container(key="auth_form"):
             user = check_user_login(username, password)
 
             if user:
+                st.session_state.is_logged_in = True  # Дополнительный удобный флаг!!!!!!!!
                 st.session_state.user = user
                 st.success(f"Добро пожаловать, {user['username']}!")
-                st.switch_page("pages/04_Profile.py")  # переход
+                st.switch_page("pages/01_Home.py")  # Рекомендую переходить на Главную, чтобы увидеть обновленную шапку!!!!!!!
             else:
                 st.error("Неверный ник или пароль")
     else:

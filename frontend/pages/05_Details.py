@@ -31,7 +31,7 @@ if movie_data:
         # Плашка с рейтингом
         st.markdown(f"""
             <div style="background: #610f2e; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
-                <span style="color: white; font-size: 1.2rem; font-weight: bold;">★ Рейтинг: {movie_data['rating']}</span>
+                <span style="color: white; font-size: 1.2rem; font-weight: bold;">Возрастное ограничение: {movie_data['rating']}</span>
             </div>
         """, unsafe_allow_html=True)
 

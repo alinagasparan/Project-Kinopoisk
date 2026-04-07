@@ -21,6 +21,6 @@ def show_mascot():
                 font-size: 12px;
                 text-align: center;
                 margin-top: 5px;
-            "></p>
+            ">Привет! Помочь?</p>
         </div>
     """, unsafe_allow_html=True)
