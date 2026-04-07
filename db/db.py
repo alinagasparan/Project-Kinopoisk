@@ -110,6 +110,7 @@ def get_film_info(conn, movie_id):
             m.overview AS description,
             m.release_year,
             m.imdb_rating,
+            m.poster_link,
             d.name AS director,
             STRING_AGG(DISTINCT g.genre_name, ', ') AS categories,
             STRING_AGG(DISTINCT a.name, ', ') AS actors
@@ -120,7 +121,7 @@ def get_film_info(conn, movie_id):
         LEFT JOIN Movie_Actors ma ON m.movie_id = ma.movie_id
         LEFT JOIN Actors a ON ma.actor_id = a.actor_id
         WHERE m.movie_id = %s
-        GROUP BY m.title, m.overview, m.release_year, m.imdb_rating, d.name;"""
+        GROUP BY m.title, m.overview, m.release_year, m.imdb_rating, m.poster_link, d.name;"""
         cur.execute(query, (movie_id,))
         film = cur.fetchone()
         return film
