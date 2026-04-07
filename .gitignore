@@ -1,7 +1,0 @@
-.idea/
-.env
-__pycache__/
-*.pyc
-create_db.py
-imdb_top_1000.csv
-users-schema.sql
