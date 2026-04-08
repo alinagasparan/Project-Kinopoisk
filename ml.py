@@ -35,6 +35,11 @@ def extract_keywords(query, stop_phrases):
     keywords = [w for w in words if w not in stop_phrases]
     return keywords
 
+def keyword_mask(text, keywords):
+    if not keywords:
+        return True
+    text = text.lower()
+    return all(k in text for k in keywords)
 
 #Функция извлечения жанров из списка(возможно аналогия готова)
 def extract_genres(query, all_genres):
@@ -171,11 +176,10 @@ def rank_movies(df, combined_indices, scores, query_genres, top_n=50):
     return sorted(final_results, key=lambda x: x[1], reverse=True)
 
 
-def process_query(query, df, all_genres, model, movie_embeddings, centroids, stop_phrases, ner_pipeline):
+def process_query(query, df, all_genres, model, movie_embeddings, centroids, stop_phrases):
     
     keywords = extract_keywords(query, stop_phrases)
     query_genres = extract_genres(query, all_genres)
-    entities = extract_entities(query, ner_pipeline)
     
     df_filtered = filter_by_genres(df, query_genres)
     df_filtered = filter_by_keywords(df_filtered, keywords)
@@ -207,7 +211,7 @@ def process_query(query, df, all_genres, model, movie_embeddings, centroids, sto
 
 
 stop_phrases = get_stop_phrases()
-df = download_csv()
+df = dowonload_csv()
 df, all_genres = prepare_genre(df)
 model = initialize_model()
 movie_embeddings = create_movie_embeddings(df, model)
@@ -270,14 +274,13 @@ def print_movie_result(rank, idx, score):
     row = df.iloc[idx]
     
     print(f"\n{'─'*60}")
-    print(f"🎬 {rank}. {row.get('Series_Title', 'Unknown')} ({row.get('Released_Year', 'N/A')})")
+    print(f" {rank}. {row.get('Series_Title', 'Unknown')} ({row.get('Released_Year', 'N/A')})")
     print(f"{'─'*60}")
     print(f"    Рейтинг: {row.get('IMDB_Rating', 'N/A')}/10  |  Metascore: {row.get('Meta_score', 'N/A')}")
     print(f"    Жанры: {row.get('Genre', 'N/A')}")
     print(f"    Режиссер: {row.get('Director', 'N/A')}")
     print(f"    В ролях: {row.get('Star1', '')}, {row.get('Star2', '')}, {row.get('Star3', '')}")
     print(f"    Сюжет: {row.get('Overview', 'No description')[:200]}...")
-    print(f"    Совпадение: {score*100:.1f}%")
     print(f"{'─'*60}")
 
 def search_and_display(query, top_k=10):
@@ -291,7 +294,7 @@ def search_and_display(query, top_k=10):
         movie_embeddings=movie_embeddings,
         centroids=centroids,
         stop_phrases=stop_phrases,
-        ner_pipeline=ner_pipeline
+       
     )
     
     if not results:
