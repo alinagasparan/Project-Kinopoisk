@@ -1,0 +1,12 @@
+[client]
+toolbarMode = "minimal"
+
+[ui]
+hideTopBar = true
+
+[theme]
+primaryColor = "#3B82F6"
+backgroundColor = "#110f20"
+secondaryBackgroundColor = "#1e223b"
+textColor = "#F1F5F9"
+font = "sans serif"
