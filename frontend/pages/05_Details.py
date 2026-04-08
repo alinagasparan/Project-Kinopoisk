@@ -6,7 +6,7 @@ st.set_page_config(page_title="Детали фильма", layout="wide")
 apply_styles()
 
 movie_title = st.session_state.get("selected_movie")
-movie_id = st.session_state.get("selected_film_id")
+movie_id = st.session_state.get("selected_movie_id")
 
 if not movie_title or not movie_id:
     st.warning("Фильм не выбран. Пожалуйста, вернитесь на главную страницу.")
@@ -26,12 +26,14 @@ if movie_data:
 
     with col_img:
         #постер
-        st.image("https://i.pinimg.com/736x/51/71/24/517124fcea493bad8d49e69181131902.jpg", use_container_width=True)
+        poster_url = movie_data['poster_link'] if movie_data['poster_link'] else "https://via.placeholder.com/500x750?text=No+Poster"
+        
+        st.image(poster_url, use_container_width=True)
         
         # Плашка с рейтингом
         st.markdown(f"""
             <div style="background: #610f2e; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
-                <span style="color: white; font-size: 1.2rem; font-weight: bold;">Возрастное ограничение: {movie_data['rating']}</span>
+                <span style="color: white; font-size: 1.2rem; font-weight: bold;">★ Рейтинг: {movie_data['imdb_rating']}</span>
             </div>
         """, unsafe_allow_html=True)
 

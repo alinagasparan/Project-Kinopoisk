@@ -5,8 +5,8 @@ from utils import show_mascot
 # Главное окно (Премьеры, Новости)
 st.set_page_config(page_title="Home", layout="wide")
 st.subheader("🔥 Премьеры недели")
-id=[133,2,3,4]
-titles = ["CHAMBER ITALIAN", "Вонка", "Игра престолов", "Во все тяжкие"]
+id=[81,2,3,4]
+titles = ["The Shawshank Redemption", "Вонка", "Игра престолов", "Во все тяжкие"]
 posters = [
     "https://upload.wikimedia.org/wikipedia/ru/5/5a/Spider-Man_Homecoming_logo.jpg",
     "https://upload.wikimedia.org/wikipedia/ru/thumb/9/95/Wonka_%28film%2C_2023%29.jpg/500px-Wonka_%28film%2C_2023%29.jpg",
@@ -19,7 +19,7 @@ with st.container(key="premieres"):
     for i, col in enumerate(cols):
         with col:
             render_movie_card(
-                film_id = id[i],
+                movie_id = id[i],
                 title=titles[i], 
                 img_url=posters[i]
             )

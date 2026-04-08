@@ -1,13 +1,13 @@
 import streamlit as st
 from pathlib import Path
+import base64
 
 FRONTEND_DIR = Path(__file__).resolve().parent
 
 def show_mascot():
-    mascot_path = FRONTEND_DIR / "assets" / "cinecat.png"
+    mascot_path = FRONTEND_DIR / "assets" / "cinemindcat.png"
     
     with open(mascot_path, "rb") as f:
-        import base64
         img_data = base64.b64encode(f.read()).decode()
     
     st.markdown(f"""

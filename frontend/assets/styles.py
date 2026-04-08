@@ -183,8 +183,8 @@ def search_style():
 
         .block-container {
             max-width: 95% !important; /* Увеличиваем полезную ширину до 95% */
-            padding-left: 2rem !important;
-            padding-right: 2rem !important;
+            padding-left: 0rem !important;
+            padding-right: 0rem !important;
             padding-top: 1rem !important;
         }
 
@@ -377,6 +377,18 @@ def filter_panel():
     drama = st.checkbox("Драма")
     horror = st.checkbox("Ужасы")
     mult = st.checkbox("Мультфильмы")
+
+    st.markdown("""
+        <div style="background:#242330; padding:10px 16px; margin-top:16px; margin-bottom: 5px;">
+            <span style="color:#ffffff; font-weight:500; font-size:14px; letter-spacing:1px;">ГОД ВЫПУСКА</span>
+        </div>
+    """, unsafe_allow_html=True)
+    year_input = st.selectbox(
+        label="",
+        options=["Любой"] + list(range(2025, 1969, -1)),
+        label_visibility="collapsed"
+    )
+    selected_year = None if year_input == "Любой" else int(year_input)
 
     st.markdown("""
         <div style="background:#242330; padding:10px 16px; margin-top:16px; margin-bottom: 5px;">

@@ -2,6 +2,9 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import base64
+from pathlib import Path
+
 import streamlit as st
 from assets.styles import apply_styles, search_style
 from backend.main1 import get_films_by_search
@@ -27,6 +30,18 @@ if "last_query" not in st.session_state:
     st.session_state.last_query = ""
 if "is_logged_in" not in st.session_state:
     st.session_state.is_logged_in = False
+
+FRONTEND_DIR = Path(__file__).resolve().parent
+mascot_path = FRONTEND_DIR / "assets" / "navbar_img.jpg"
+with open(mascot_path, "rb") as f:
+        img_data = base64.b64encode(f.read()).decode()
+# Картинка над шапкой
+st.markdown(f"""
+    <div style="width: 100%; max-height: 230px; overflow: hidden; margin-top: -3rem; margin-bottom: 1rem; border-radius: 0 0 15px 15px;">
+        <img src="data:image/jpg;base64,{img_data}"
+             style="width: 100%; max-height: 230px; object-fit: cover; display: block;">
+    </div>
+""", unsafe_allow_html=True)
 
 # Шапка
 with st.container(key="navbar"):
@@ -81,7 +96,7 @@ if search_query and st.session_state.search_results:
         title = film.get("title", "Без названия")
         year  = film.get("year", "")
         # Используем постер из данных или заглушку
-        poster = film.get("poster") or "https://via.placeholder.com/45x65?text=?"
+        poster = film.get("poster_link") or "https://via.placeholder.com/45x65?text=?"
         year_html = f'<div class="film-year">📅 {year}</div>' if year else ""
 
         # HTML-карточка (визуал)
@@ -104,7 +119,7 @@ if search_query and st.session_state.search_results:
         if st.button(btn_label, key=f"f_res_{film['id']}", use_container_width=True):
             # Устанавливаем ключи, которые ожидает 05_Details.py
             st.session_state.selected_movie = film.get("title")  # Название фильма
-            st.session_state.selected_film_id = film.get("id")   # ID фильма
+            st.session_state.selected_movie_id = film.get("id")   # ID фильма
             
             # Очищаем результаты поиска для чистого возврата
             st.session_state.search_results = []
