@@ -18,6 +18,7 @@ def get_films_by_search(text):
             result.append({
                 "id": film["movie_id"],
                 "title": film["title"],
+                "poster_link": info["poster_link"] if info else "",
                 "description": info["description"] if info else "",
                 "year": info["release_year"] if info else None,
                 "imdb_rating": info["imdb_rating"] if info else None
@@ -44,11 +45,11 @@ def register_user(user_name, user_password, avatar_url=None):
 def check_user_login(username, password):
     conn = db.get_connection()
     try:
-        success = db.user_login(conn, username, password)
-
-        if success:
+        user_id = db.user_login(conn, username, password)
+        if user_id:
             return {
-                "username": username
+                "username": username,
+                "id": user_id
             }
         else:
             return None
@@ -80,8 +81,8 @@ def get_user_profile(user_id):
 
         if not user:
             return None
-        seen_films = db.get_films_from_users_list(conn, user_id, 1)   # просмотрено
-        planned_films = db.get_films_from_users_list(conn, user_id, 2)  # запланировано
+        seen_films = db.get_films_from_users_list(conn, user_id, 3)   # просмотрено
+        planned_films = db.get_films_from_users_list(conn, user_id, 1)  # запланировано
 
         return {
             "id": user[0],
@@ -94,3 +95,58 @@ def get_user_profile(user_id):
 
     finally:
         conn.close()
+def change_user_avatar(user_id, avatar_url):
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE users_schema.users
+                SET avatar_url = %s
+                WHERE id = %s;
+            """, (avatar_url, user_id))
+            conn.commit()
+        user_profile = db.get_users_profile(conn, user_id)
+        if user_profile:
+            return user_profile['avatar_url']
+        return None
+    finally:
+        conn.close()
+def update_user_profile(user_id, username=None, password=None, avatar=None):
+    conn = db.get_connection()
+    try:
+        user = db.change_users_profile(
+            conn,
+            user_id,
+            user_name=username,
+            user_password=password,
+            avatar_url=avatar
+        )
+
+        if user:
+            return {
+                "id": user[0],
+                "username": user[1],
+                "avatar": user[2]
+            }
+
+        return None
+
+    finally:
+        conn.close()
+def get_all_movies_with_details():
+    conn = db.get_connection()
+    films_basic = db.get_all_films(conn)
+    all_movies = []
+
+    with conn.cursor(cursor_factory=db.RealDictCursor) as cur:
+        for film in films_basic:
+            movie_id = film['movie_id']
+            query = """SELECT movie_id, title, poster_link, release_year
+                       FROM public.movies
+                       WHERE movie_id = %s;"""
+            cur.execute(query, (movie_id,))
+            movie = cur.fetchone()
+            if movie:
+                all_movies.append(movie)
+
+    return all_movies
