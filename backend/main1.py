@@ -20,8 +20,7 @@ def get_films_by_search(text):
                 "title": film["title"],
                 "poster_link": info["poster_link"] if info else "",
                 "description": info["description"] if info else "",
-                "year": info["release_year"] if info else None,
-                "imdb_rating": info["imdb_rating"] if info else None
+                "year": info["release_year"] if info else None
             })
 
         return result
@@ -150,3 +149,44 @@ def get_all_movies_with_details():
                 all_movies.append(movie)
 
     return all_movies
+
+def add_movie_to_user_list(user_id, movie_id, status):
+    conn = db.get_connection()
+    try:
+        status_map = {
+            "seen": 3,
+            "planned": 1
+        }
+        status_id = status_map.get(status)
+
+        if status_id is None:
+            raise ValueError("Неверный статус")
+
+        return db.add_film_to_list(conn, user_id, movie_id, status_id)
+
+    finally:
+        conn.close()
+from ml import search_movies
+
+def chat_with_ml(message):
+   
+    if not message or message.strip() == "":
+        return []
+
+    try:
+        results = search_movies(message, top_k=10)
+        
+        response = []
+        for film in results:
+            response.append({
+                "title": film["title"],
+                "year": film["year"],
+                "genre": film["genre"],
+                "rating": film["rating"],
+                "overview": film["overview"]
+            })
+
+        return response
+
+    except Exception as e:
+        return [{"error": str(e)}]
