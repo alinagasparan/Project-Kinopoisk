@@ -47,16 +47,17 @@ def user_register(conn, user_name, user_password, avatar_url=None):
 #Вход в систему
 def user_login(conn, nickname, password):
     with conn.cursor() as cur:
-        query = """SELECT user_name, user_password 
+        query = """SELECT id, user_password 
         FROM users_schema.users
         WHERE LOWER(user_name) = LOWER(%s);"""
         cur.execute(query, (nickname,))
         user = cur.fetchone()
         if user is None:
-            return False
-        if user[1] == password:
-            return True
-        return False
+            return None
+        id, user_password = user
+        if user_password == password:
+            return id
+        return None
 
 #Данные из профиля пользователя
 def get_users_profile(conn, user_id):
@@ -92,6 +93,12 @@ def change_users_profile(conn, user_id, user_name=None, user_password=None, avat
         conn.commit()
         cur.execute("""SELECT * FROM users_schema.users WHERE id = %s;""", (user_id,))
         return cur.fetchone()
+
+def get_all_films(conn):
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        query = """SELECT movie_id FROM public.movies"""
+        cur.execute(query)
+        return cur.fetchall()
 
 #Добавление фильма в список. True если добавился, False если фильм был в другом списке и просто его статус поменялся
 def add_film_to_list(conn, user_id, movie_id, status_id):
