@@ -58,6 +58,41 @@ def user_login(conn, nickname, password):
             return True
         return False
 
+#Данные из профиля пользователя
+def get_users_profile(conn, user_id):
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        query = """ SELECT user_name, user_password, avatar_url
+        FROM users_schema.users
+        WHERE id = %s;"""
+        cur.execute(query, (user_id,))
+        return cur.fetchone()
+
+#Возвращает обновленного пользователя
+def change_users_profile(conn, user_id, user_name=None, user_password=None, avatar_url=None):
+    with conn.cursor() as cur:
+        values = []
+        fields = []
+        if user_name is not None:
+            fields.append("user_name = %s")
+            values.append(user_name)
+        if user_password is not None:
+            fields.append("user_password = %s")
+            values.append(user_password)
+        if avatar_url is not None:
+            fields.append("avatar_url = %s")
+            values.append(avatar_url)
+
+        if not fields:
+            return
+        query = f""" 
+            UPDATE users_schema.users
+            SET {', '.join(fields)}
+            WHERE id = %s;"""
+        cur.execute(query, (values, user_id))
+        conn.commit()
+        cur.execute("""SELECT * FROM users_schema.users WHERE id = %s;""", (user_id,))
+        return cur.fetchone()
+
 #Добавление фильма в список. True если добавился, False если фильм был в другом списке и просто его статус поменялся
 def add_film_to_list(conn, user_id, movie_id, status_id):
     with conn.cursor() as cur:
