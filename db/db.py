@@ -229,6 +229,16 @@ def write_comment_on_film(conn, user_id, movie_id, text):
         comment = cur.fetchone()
         return comment
 
+def get_comments_to_film(conn, movie_id):
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        query = """SELECT c.id, c.comm, u.user_name
+        FROM users_schema.comments c
+        JOIN users_schema.users u ON c.user_id = u.id
+        WHERE c.movie_id = %s
+        ORDER BY c.id DESC;"""
+        cur.execute(query, (movie_id,))
+        return cur.fetchall()
+
 def add_new_film(conn, url, title, genres, directors, cast, release_year, overview, poster_link):
     with conn.cursor() as cur:
         cur.execute("""INSERT INTO public.Movies (url, title, release_year, synopsis, poster_link)
@@ -270,5 +280,4 @@ def add_new_film(conn, url, title, genres, directors, cast, release_year, overvi
                         ON CONFLICT DO NOTHING""", (movie_id, actor_id))
         conn.commit()
         return movie_id
-
 
