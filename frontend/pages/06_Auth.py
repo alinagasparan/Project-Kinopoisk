@@ -4,11 +4,12 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from backend.main1 import register_user, check_user_login
 import streamlit as st
-from assets.styles import apply_styles          
+from assets.styles import apply_styles    
 
 # Окно регистрации/входа
 
 st.set_page_config(page_title="Authentication", layout="wide")
+apply_styles()
 
 if "auth_mode" not in st.session_state:
     st.session_state.auth_mode = "login"
@@ -24,10 +25,10 @@ with st.container(key="auth_form"):
             user = check_user_login(username, password)
 
             if user:
-                st.session_state.is_logged_in = True  # Дополнительный удобный флаг!!!!!!!!
+                st.session_state.is_logged_in = True
                 st.session_state.user = user
                 st.success(f"Добро пожаловать, {user['username']}!")
-                st.switch_page("pages/01_Home.py")  # Рекомендую переходить на Главную, чтобы увидеть обновленную шапку!!!!!!!
+                st.switch_page("pages/01_Home.py")
             else:
                 st.error("Неверный ник или пароль")
     else:

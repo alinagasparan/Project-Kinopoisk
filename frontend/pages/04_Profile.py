@@ -7,6 +7,7 @@ if "user" not in st.session_state:
     st.warning("Сначала войдите!")
     st.stop()
 st.set_page_config(page_title="Profile", layout="wide")
+apply_styles()
 
 user_info = get_user_profile(st.session_state.user['id'])
 
@@ -67,7 +68,7 @@ if user_info:
         else:
             st.info("Ваш список 'Запланировано' пока пуст.")
 
-    # --- ADD ADMIN MOVIE BLOCK ---
+    # Блок админа
     if user_info['username'].lower() == "admin":
         st.divider()
         st.subheader("Добавление нового фильма")

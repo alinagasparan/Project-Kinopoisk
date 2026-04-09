@@ -184,6 +184,28 @@ def apply_styles():
             z-index: 1;
         }
 
+        /* Новости */
+        .news-card {
+        background-color: #1e1e26;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 5px solid #E50914; /* Красный акцент в стиле Netflix */
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .news-title {
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 12px;
+        }
+        .news-text {
+            color: #cccccc;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
     </style>
     """
     
@@ -372,14 +394,6 @@ def search_style():
     st.markdown(style_html, unsafe_allow_html=True)
 
 def filter_panel():
-    st.markdown("""
-        <div style="background:#242330; padding:10px 16px; margin-bottom: 5px;">
-            <span style="color:#ffffff; font-weight:500; font-size:14px; letter-spacing:1px;">ТИП</span>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    film = st.checkbox("Фильм")
-    serial = st.checkbox("TV Сериал")
 
     st.markdown("""
         <div style="background:#242330; padding:10px 16px; margin-top:16px; margin-bottom: 5px;">
@@ -442,11 +456,11 @@ def filter_panel():
     
     sort_by = st.radio(
         label="",
-        options=["По алфавиту", "По дате выхода"],
+        options=["По умолчанию", "По алфавиту", "По дате выхода"], 
+        index=0,
         label_visibility="collapsed"
     )
 
-    film_types = [t for t, v in [("Фильм", film), ("TV Сериал", serial)] if v]
     genres = selected_genres
 
-    return film_types, genres, sort_by, selected_year
+    return genres, sort_by, selected_year

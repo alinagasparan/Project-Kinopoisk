@@ -10,7 +10,6 @@ from assets.styles import apply_styles, search_style
 from backend.main1 import get_films_by_search
 
 st.set_page_config(layout="wide", page_title="Cinemind")
-
 apply_styles()
 search_style()
 
@@ -95,12 +94,9 @@ if search_query and st.session_state.search_results:
     for film in films:
         title = film.get("title", "Без названия")
         year  = film.get("year", "")
-        # Используем постер из данных или заглушку
         poster = film.get("poster_link") or "https://via.placeholder.com/45x65?text=?"
         year_html = f'<div class="film-year">📅 {year}</div>' if year else ""
 
-        # HTML-карточка (визуал)
-        # ВАЖНО: Весь HTML должен быть внутри одного st.markdown
         st.markdown(f"""
         <div class="film-result-card">
             <div class="film-poster-container">
@@ -118,8 +114,8 @@ if search_query and st.session_state.search_results:
 
         if st.button(btn_label, key=f"f_res_{film['id']}", use_container_width=True):
             # Устанавливаем ключи, которые ожидает 05_Details.py
-            st.session_state.selected_movie = film.get("title")  # Название фильма
-            st.session_state.selected_movie_id = film.get("id")   # ID фильма
+            st.session_state.selected_movie = film.get("title")  
+            st.session_state.selected_movie_id = film.get("id")
             
             # Очищаем результаты поиска для чистого возврата
             st.session_state.search_results = []

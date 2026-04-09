@@ -31,13 +31,6 @@ if movie_data:
 
         st.image(poster_url, use_container_width=True)
 
-        # Плашка с рейтингом
-        # st.markdown(f"""
-        # <div style="background: #610f2e; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
-        # <span style="color: white; font-size: 1.2rem; font-weight: bold;">★ Рейтинг: {movie_data['imdb_rating']}</span>
-        #  </div>
-    #  """, unsafe_allow_html=True)
-
     with col_info:
         st.title(movie_data['title'])
 

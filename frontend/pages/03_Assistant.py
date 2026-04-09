@@ -3,14 +3,13 @@ from assets.styles import apply_styles
 import backend.main1 as logic  
 
 st.set_page_config(page_title="Cinemind Assistant", layout="wide", page_icon="🐱")
-
 apply_styles()
 
 st.title("🐱 Твой Кино-Кот")
 
 # Если пользователь не вошел
 if not st.session_state.get("is_logged_in"):
-    st.warning("Мяу! 🐾 Чтобы поболтать с Кино-котом, нужно показать лапки (войти в аккаунт).")
+    st.warning("Мяу! 🐾 Чтобы поболтать с Кино-котом, нужно войти в аккаунт.")
     if st.button("Перейти к авторизации"):
         st.switch_page("pages/06_Auth.py") 
     st.stop()
