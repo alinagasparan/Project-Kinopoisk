@@ -388,7 +388,7 @@ def search_movies(query, top_k=10):
                 "rating": str(rating_value),
                 "director": str(director),
                 "cast": str(cast),
-                "synopsis": str(synopsis),
+                "overview": str(synopsis),
                 "poster_url": str(poster_url),
                 "score": float(score)
             })
