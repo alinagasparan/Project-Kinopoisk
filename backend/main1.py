@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(__file__))
-#import ml.ml
+import ml.ml
 import db
 def get_films_by_search(text):
     conn = db.get_connection()
@@ -137,6 +137,7 @@ def get_all_movies_with_details():
     films_basic = db.get_all_films(conn)
     all_movies = []
 
+
     with conn.cursor(cursor_factory=db.RealDictCursor) as cur:
         for film in films_basic:
             movie_id = film['movie_id']
@@ -166,7 +167,7 @@ def add_movie_to_user_list(user_id, movie_id, status):
 
     finally:
         conn.close()
-'''
+
 def chat_with_ml(message):
 
     if not message or message.strip() == "":
@@ -189,60 +190,91 @@ def chat_with_ml(message):
 
     except Exception as e:
         return [{"error": str(e)}]
-'''
+
 #фильмы для премьеры
 def get_latest_movies(limit=4):
-    conn = db.get_connection()
-    try:
-        films = db.search_film_with_filters(
-            conn,
-            sort_by="year",
-            sort_order="desc"
-        )
-
-        result = []
-        for film in films[:limit]:
-            info = db.get_film_info(conn, film["movie_id"])
-
-            result.append({
-                "id": film["movie_id"],
-                "title": film["title"],
-                "year": film.get("release_year"),
-                "poster": info.get("poster_link") if info else None
-            })
-
-        return result
-
-    finally:
-        conn.close()
+    # Вместо проблемной db.search_film_with_filters 
+    # используем вашу же функцию с правильной сортировкой
+    films = get_all_movies_newest_first() 
+    
+    result = []
+    # Берем только первые limit фильмов (например, 4)
+    for film in films[:limit]:
+        result.append({
+            "id": film["movie_id"],
+            "title": film["title"],
+            "year": film["release_year"],
+            "poster": film["poster_link"]
+        })
+    return result
 
 
 from psycopg2.extras import RealDictCursor
 
-'''
-def add_movie(conn, title, overview, release_year, poster_link, director_id):
 
+def add_movie(conn, title, overview, release_year, poster_link, genres=None):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        # Проверяем, есть ли фильм с таким названием
-        cur.execute("SELECT movie_id FROM public.Movies WHERE LOWER(title) = LOWER(%s);", (title,))
+        
+        # проверка на дубликат
+        cur.execute(
+            "SELECT movie_id FROM public.Movies WHERE LOWER(title) = LOWER(%s);",
+            (title,)
+        )
         existing = cur.fetchone()
+
         if existing:
-            return {"error": "Фильм с таким названием уже существует", "movie_id": existing["movie_id"]}
-            
-        query = """
-        INSERT INTO public.Movies (title, overview, release_year, poster_link, director_id)
-        VALUES (%s, %s, %s, %s, %s)
-        RETURNING movie_id, title, poster_link, release_year;
-        """
-        cur.execute(query, (title, overview, release_year, poster_link, director_id))
+            return {
+                "error": "Фильм уже существует",
+                "movie_id": existing["movie_id"]
+            }
+
+        # добавление фильма
+        cur.execute("""
+            INSERT INTO public.Movies (title, overview, release_year, poster_link)
+            VALUES (%s, %s, %s, %s)
+            RETURNING movie_id, title, poster_link, release_year;
+        """, (title, overview, release_year, poster_link))
+
         movie = cur.fetchone()
+        movie_id = movie["movie_id"]
+
+        # --- добавление жанров ---
+        if genres:
+            for genre in genres:
+                # создаем жанр если его нет
+                cur.execute("""
+                    INSERT INTO public.genres (genre_name)
+                    VALUES (%s)
+                    ON CONFLICT (genre_name) DO NOTHING
+                    RETURNING genre_id;
+                """, (genre,))
+                
+                result = cur.fetchone()
+
+                if result:
+                    genre_id = result["genre_id"]
+                else:
+                    cur.execute("""
+                        SELECT genre_id 
+                        FROM public.genres 
+                        WHERE genre_name = %s;
+                    """, (genre,))
+                    genre_id = cur.fetchone()["genre_id"]
+
+                # связываем фильм и жанр
+                cur.execute("""
+                    INSERT INTO public.movie_genres (movie_id, genre_id)
+                    VALUES (%s, %s)
+                    ON CONFLICT DO NOTHING;
+                """, (movie_id, genre_id))
+
         conn.commit()
         return movie
-'''
 
 #    Возвращает список фильмов по одному жанру для фронта
  #   в формате: id, title, poster, year
 def get_movies_by_genre_front(genre_name):
+
 
     conn = db.get_connection()
     try:
@@ -275,9 +307,9 @@ def get_all_movies_sorted_by_title(ascending=True):
         conn.close()
 
     #Возвращает все фильмы, отсортированные от новых к старым (по году выпуска, descending)
-    
+
 def get_all_movies_newest_first():
-    
+
     conn = db.get_connection()
     try:
         with conn.cursor(cursor_factory=db.RealDictCursor) as cur:
@@ -287,5 +319,41 @@ def get_all_movies_newest_first():
                 ORDER BY release_year DESC;
             """)
             return cur.fetchall()
+    finally:
+        conn.close()
+#фильп по году
+def get_films_by_year(conn, year):
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        query = """
+        SELECT 
+            m.movie_id,
+            m.title,
+            m.release_year,
+            m.poster_link
+        FROM public.Movies m
+        WHERE m.release_year = %s
+        ORDER BY m.title;
+        """
+        cur.execute(query, (year,))
+        return cur.fetchall()
+#добавление комментов
+
+def add_comment(user_id, movie_id, text):
+    conn = db.get_connection()
+
+    try:
+        comment = db.write_comment_on_film(conn, user_id, movie_id, text)
+
+        return {
+            "id": comment["id"],
+            "user_id": comment["user_id"],
+            "movie_id": comment["movie_id"],
+            "text": comment["comm"],
+            "created_at": str(comment["created_at"])
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
+
     finally:
         conn.close()
