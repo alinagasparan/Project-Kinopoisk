@@ -22,7 +22,7 @@ auth = st.Page("pages/06_Auth.py", title="Войти")
 
 pg = st.navigation([home, catalog, assistant, auth, profile, details], position="hidden")
 
-# Инициализация
+# Инициализация состояний
 if "search_results" not in st.session_state:
     st.session_state.search_results = []
 if "last_query" not in st.session_state:
@@ -32,12 +32,12 @@ if "last_page" not in st.session_state:
 if "clear_search" not in st.session_state:
     st.session_state.clear_search = False
 
-# Если объект текущей страницы изменился (пользователь кликнул в меню)
+# обнуление при смене страницы
 if st.session_state.last_page != pg.title:
     st.session_state.search_results = []
     st.session_state.last_query = ""
     st.session_state.last_page = pg.title
-    st.session_state.clear_search = True # Включаем флаг для очистки поля ввода
+    st.session_state.clear_search = True
 
 # Над шапкой
 FRONTEND_DIR = Path(__file__).resolve().parent
@@ -51,7 +51,7 @@ if mascot_path.exists():
         </div>
     """, unsafe_allow_html=True)
 
-# Шапка
+# Навигационная панель
 with st.container(key="navbar"):
     col_menu, col_title, col_search, col_none, col_auth = st.columns([0.9, 1.2, 3.4, 0.8, 0.8])
 
@@ -65,6 +65,7 @@ with st.container(key="navbar"):
         st.markdown('<div class="nav-logo">Cinemind</div>', unsafe_allow_html=True)
 
     with col_search:
+        # Если страница изменилась, обнуляем значение виджета
         if st.session_state.clear_search:
             st.session_state.search_input = ""
             st.session_state.clear_search = False
@@ -84,7 +85,7 @@ with st.container(key="navbar"):
             if st.button("Войти", use_container_width=True, key="nav_auth"):
                 st.switch_page(auth)
 
-# Обработка поиска
+# Обработка поискового запроса
 if search_query and search_query != st.session_state.last_query:
     st.session_state.last_query = search_query
     st.session_state.search_results = get_films_by_search(search_query)
@@ -92,8 +93,8 @@ elif not search_query:
     st.session_state.search_results = []
     st.session_state.last_query = ""
 
-# Показываем результаты только если мы на главной и есть запрос
-if pg.title == home.title and search_query and st.session_state.search_results:
+# Поиск
+if search_query and st.session_state.search_results:
     with st.container():
         films = st.session_state.search_results
         st.markdown(f'<div class="search-results-header">Найдено: {len(films)}</div>', unsafe_allow_html=True)
@@ -118,7 +119,7 @@ if pg.title == home.title and search_query and st.session_state.search_results:
             if st.button(f"Смотреть {title}", key=f"f_res_{film['id']}", use_container_width=True):
                 st.session_state.selected_movie = title
                 st.session_state.selected_movie_id = film.get("id")
-                # Сбрасываем поиск перед уходом
+                # Сбрасываем поиск перед переходом на страницу фильма
                 st.session_state.search_results = []
                 st.session_state.last_query = ""
                 st.session_state.clear_search = True

@@ -6,13 +6,42 @@ from backend.main1 import get_user_profile, change_user_avatar, add_movie, get_a
 if "user" not in st.session_state:
     st.warning("Сначала войдите!")
     st.stop()
+
 st.set_page_config(page_title="Profile", layout="wide")
 apply_styles()
 
 user_info = get_user_profile(st.session_state.user['id'])
 
+# --- ОПРЕДЕЛЕНИЕ ФРАГМЕНТА ДЛЯ АДМИНКИ ---
+@st.fragment
+def render_admin_panel():
+    st.divider()
+    st.subheader("Добавление нового фильма")
+
+    # Форма внутри фрагмента изолирует ввод данных от остальной страницы
+    with st.form("admin_add_movie_form", clear_on_submit=True):
+        title = st.text_input("Название фильма")
+        overview = st.text_area("Описание фильма")
+        year = st.number_input("Год выпуска", min_value=1900, max_value=2100, value=2024)
+        genres_input = st.text_input("Жанры (через запятую)")
+        poster = st.text_input("Ссылка на постер")
+        
+        submit_button = st.form_submit_button("Добавить фильм")
+
+        if submit_button:
+            if not title or not poster:
+                st.warning("Название и ссылка на постер обязательны!")
+            else:
+                result = add_movie(title, overview, year, poster, genres_input)
+                
+                if isinstance(result, dict) and "error" in result:
+                    st.error(result["error"])
+                else:
+                    st.success(f"Фильм '{title}' успешно добавлен!")
+                    # Очищаем кеш, чтобы фильм появился в поиске/каталоге без перезагрузки профиля
+                    st.cache_data.clear()
+
 if user_info:
-    
     if st.button("← Главное меню"):
         st.switch_page("pages/01_Home.py")
 
@@ -45,7 +74,7 @@ if user_info:
         """, unsafe_allow_html=True)
 
         st.subheader("Управление аккаунтом")
-        if st.button("Log Out"):
+        if st.button("Выйти из аккаунта"):
             del st.session_state.user
             st.session_state.is_logged_in = False
             st.switch_page("pages/01_Home.py")
@@ -54,6 +83,7 @@ if user_info:
 
     tab_seen, tab_plan = st.tabs(["✅ Просмотрено", "⏳ Запланировано"])
 
+    # Загрузка данных (происходит только при общей перезагрузке страницы)
     with st.spinner("Загружаем постеры ваших фильмов..."):
         all_movies_data = get_all_movies_with_details()
         poster_map = {}
@@ -89,22 +119,6 @@ if user_info:
     with tab_plan:
         render_custom_grid(user_info['planned'], "Ваш список 'Запланировано' пока пуст.")
 
-    # Блок админа
+    # --- ВЫЗОВ ФРАГМЕНТА АДМИНА ---
     if user_info['username'].lower() == "admin":
-        st.divider()
-        st.subheader("Добавление нового фильма")
-
-        title = st.text_input("Название фильма", key="admin_title")
-        overview = st.text_area("Описание фильма", key="admin_overview")
-        year = st.number_input("Год выпуска", min_value=1900, max_value=2100, key="admin_year")
-        genres_input = st.text_input("Жанры (через запятую)", key="genres")
-        poster = st.text_input("Ссылка на постер", key="admin_poster")
-
-        if st.button("Добавить фильм", key="admin_add_movie"):
-            result = add_movie(title, overview, year, poster, genres_input)
-            
-            if "error" in result:
-                st.warning(result["error"])
-            else:
-                st.success(f"Фильм добавлен! ID: {result['movie_id']}")
-                st.json(result)
+        render_admin_panel()
