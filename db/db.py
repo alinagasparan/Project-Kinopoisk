@@ -6,7 +6,7 @@ from psycopg2 import errors
 from psycopg2.extras import RealDictCursor
 
 load_dotenv()
-#Подключение к серверу для работы с базой python -c "from dotenv import load_dotenv; print('OK')"
+#Подключение к серверу для работы с базой
 def get_connection():
     return psycopg2.connect(
         host=os.getenv("DB_HOST"),
@@ -22,23 +22,18 @@ def get_count(conn, table_name):
         query = sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(table_name))
         cur.execute(query)
         result = cur.fetchone()
-        return (f"{result[0]} элементов в таблице {table_name}")
+        return result[0]
 
 #Регистрация пользователя
 def user_register(conn, user_name, user_password, avatar_url=None):
     try:
         with conn.cursor() as cur:
-            query = """
-                INSERT INTO users_schema.users (user_name, user_password, avatar_url)
-                VALUES (%s, %s, %s)
-                RETURNING id;
-                """
+            query = """INSERT INTO users_schema.users (user_name, user_password, avatar_url)
+                VALUES (%s, %s, %s) RETURNING id;"""
             cur.execute(query, (user_name, user_password, avatar_url))
             user_id = cur.fetchone()[0]
-
         conn.commit()
         return user_id
-
     except psycopg2.errors.UniqueViolation:
         conn.rollback()
         print("Username already exists")
@@ -85,8 +80,7 @@ def change_users_profile(conn, user_id, user_name=None, user_password=None, avat
 
         if not fields:
             return
-        query = f""" 
-            UPDATE users_schema.users
+        query = f"""UPDATE users_schema.users
             SET {', '.join(fields)}
             WHERE id = %s;"""
         cur.execute(query, (*values, user_id))
@@ -141,7 +135,6 @@ def search_film_by_name(conn, film_name):
         WHERE LOWER(title) LIKE LOWER(%s);"""
         cur.execute(query, (f"%{film_name}%",))
         films = cur.fetchall()
-        conn.commit()
         return films
 
 #Информация по фильму
@@ -155,12 +148,12 @@ def get_film_info(conn, movie_id):
             d.name AS director,
             STRING_AGG(DISTINCT g.genre_name, ', ') AS categories,
             STRING_AGG(DISTINCT a.name, ', ') AS actors
-        FROM Movies m
-        LEFT JOIN Directors d ON m.director_id = d.director_id
-        LEFT JOIN Movie_Genres mg ON m.movie_id = mg.movie_id
-        LEFT JOIN Genres g ON mg.genre_id = g.genre_id
-        LEFT JOIN Movie_Actors ma ON m.movie_id = ma.movie_id
-        LEFT JOIN Actors a ON ma.actor_id = a.actor_id
+        FROM movies m
+        LEFT JOIN directors d ON m.director_id = d.director_id
+        LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+        LEFT JOIN genres g ON mg.genre_id = g.genre_id
+        LEFT JOIN movie_actors ma ON m.movie_id = ma.movie_id
+        LEFT JOIN actors a ON ma.actor_id = a.actor_id
         WHERE m.movie_id = %s
         GROUP BY m.title, m.overview, m.release_year, m.poster_link, d.name;"""
         cur.execute(query, (movie_id,))
@@ -177,11 +170,11 @@ def search_film_with_filters(conn, title=None, genre=None, actor=None, year=None
             m.title, 
             m.release_year,
             m.poster_link
-        FROM Movies m
-        LEFT JOIN Movie_Genres mg ON m.movie_id = mg.movie_id
-        LEFT JOIN Genres g ON mg.genre_id = g.genre_id
-        LEFT JOIN Movie_Actors ma ON m.movie_id = ma.movie_id
-        LEFT JOIN Actors a ON ma.actor_id = a.actor_id
+        FROM movies m
+        LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+        LEFT JOIN genres g ON mg.genre_id = g.genre_id
+        LEFT JOIN movie_actors ma ON m.movie_id = ma.movie_id
+        LEFT JOIN actors a ON ma.actor_id = a.actor_id
         WHERE 1=1
         """
         params = []
@@ -192,7 +185,7 @@ def search_film_with_filters(conn, title=None, genre=None, actor=None, year=None
 
         if genre:
             query += " AND g.genre_name ILIKE %s"
-            params.append(f"%{genre}%")  # добавлены %
+            params.append(f"%{genre}%")
 
         if actor:
             query += " AND a.name ILIKE %s"
@@ -200,7 +193,7 @@ def search_film_with_filters(conn, title=None, genre=None, actor=None, year=None
 
         if year:
             query += " AND m.release_year = %s"
-            params.append(year)  # оставляем int
+            params.append(year)
 
         cur.execute(query, params)
         return cur.fetchall()
@@ -208,14 +201,14 @@ def search_film_with_filters(conn, title=None, genre=None, actor=None, year=None
 def sort_films(conn, sort_by="year", ascending=True):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         if sort_by == "year":
-            order_field = ["release_year"]
+            order_field = "release_year"
         elif sort_by == "title":
-            order_field = ["title"]
+            order_field = "title"
         else:
             raise ValueError("sort_by должен быть 'year' или 'title'")
         order_direction = "ASC" if ascending else "DESC"
-        query = f"""SELECT movie_id, title, poster_url, release_year FROM public.Movies
-        ORDER BY {order_field} {order_direction};"""
+        query = f"""SELECT movie_id, title, poster_link, release_year FROM public.movies
+                ORDER BY {order_field} {order_direction};"""
         cur.execute(query)
         return cur.fetchall()
 
@@ -239,32 +232,32 @@ def get_comments_to_film(conn, movie_id):
         cur.execute(query, (movie_id,))
         return cur.fetchall()
 
-def add_new_film(conn, url, title, genres, directors, cast, release_year, overview, poster_link):
+
+def add_new_film(conn, url, title, genres, director, cast, release_year, overview, poster_link):
     with conn.cursor() as cur:
-        cur.execute("""INSERT INTO public.Movies (url, title, release_year, synopsis, poster_link)
-                VALUES (%s, %s, %s, %s, %s) RETURNING movie_id""", (url, title, release_year, overview, poster_link))
-        movie_id = cur.fetchone()["movie_id"]
-        for director in directors:
-            cur.execute("""INSERT INTO public.directors (name) VALUES (%s)
-                    ON CONFLICT (name) DO NOTHING
-                    RETURNING director_id""", (director,))
-            result = cur.fetchone()
-            if result:
-                director_id = result["director_id"]
-            else:
-                cur.execute("""SELECT director_id FROM public.directors WHERE name = %s""", (director,))
-                director_id = cur.fetchone()["director_id"]
-            cur.execute("""INSERT INTO public.movie_directors (movie_id, director_id) VALUES (%s, %s)
-                    ON CONFLICT DO NOTHING""", (movie_id, director_id))
+        cur.execute("""INSERT INTO public.directors (name) VALUES (%s)
+                ON CONFLICT (name) DO NOTHING
+                RETURNING director_id""", (director,))
+        result = cur.fetchone()
+        if result:
+            director_id = result[0]
+        else:
+            cur.execute("""SELECT director_id FROM public.directors WHERE name = %s""", (director,))
+            director_id = cur.fetchone()[0]
+        cur.execute("""INSERT INTO public.movies (url, title, release_year, overview, poster_link, director_id)
+                VALUES (%s, %s, %s, %s, %s, %s) RETURNING movie_id""",
+                    (url, title, release_year, overview, poster_link, director_id))
+        movie_id = cur.fetchone()[0]
         for genre in genres:
-            cur.execute("""INSERT INTO public.genres (name) VALUES (%s)
+            cur.execute("""INSERT INTO public.genres (genre_name) VALUES (%s)
                         ON CONFLICT (name) DO NOTHING RETURNING genre_id""", (genre,))
             result = cur.fetchone()
             if result:
-                genre_id = result["genre_id"]
+                genre_id = result[0]
             else:
                 cur.execute("""SELECT genre_id FROM public.genres WHERE name = %s""", (genre,))
-                genre_id = cur.fetchone()["genre_id"]
+                genre_id = cur.fetchone()[0]
+
             cur.execute("""INSERT INTO public.movie_genres (movie_id, genre_id) VALUES (%s, %s)
                     ON CONFLICT DO NOTHING""", (movie_id, genre_id))
         for actor in cast:
@@ -272,11 +265,11 @@ def add_new_film(conn, url, title, genres, directors, cast, release_year, overvi
                     ON CONFLICT (name) DO NOTHING RETURNING actor_id""", (actor,))
             result = cur.fetchone()
             if result:
-                actor_id = result["actor_id"]
+                actor_id = result[0]
             else:
                 cur.execute("""SELECT actor_id FROM public.actors WHERE name = %s""", (actor,))
-                actor_id = cur.fetchone()["actor_id"]
-            cur.execute("""INSERT INTO public.movie_cast (movie_id, actor_id) VALUES (%s, %s)
+                actor_id = cur.fetchone()[0]
+            cur.execute("""INSERT INTO public.movie_actors (movie_id, actor_id) VALUES (%s, %s)
                         ON CONFLICT DO NOTHING""", (movie_id, actor_id))
         conn.commit()
         return movie_id
