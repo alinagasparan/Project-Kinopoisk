@@ -2,18 +2,18 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 import ml.ml
-import db
+import database.db
 def get_films_by_search(text):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
         if not text or text.strip() == "":
             return []
 
-        films = db.search_film_by_name(conn, text)
+        films = database.db.search_film_by_name(conn, text)
 
         result = []
         for film in films:
-            info = db.get_film_info(conn, film["movie_id"])
+            info = database.db.get_film_info(conn, film["movie_id"])
 
             result.append({
                 "id": film["movie_id"],
@@ -29,9 +29,9 @@ def get_films_by_search(text):
         conn.close()
 
 def register_user(user_name, user_password, avatar_url=None):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
-        user_id = db.user_register(conn, user_name, user_password, avatar_url)
+        user_id = database.db.user_register(conn, user_name, user_password, avatar_url)
 
         return {
             "id": user_id,
@@ -42,9 +42,9 @@ def register_user(user_name, user_password, avatar_url=None):
         conn.close()
 
 def check_user_login(username, password):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
-        user_id = db.user_login(conn, username, password)
+        user_id = database.db.user_login(conn, username, password)
         if user_id:
             return {
                 "username": username,
@@ -56,20 +56,20 @@ def check_user_login(username, password):
         conn.close()
 
 def get_films_by_genre(genre_name):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
-        return db.search_film_with_filters()
+        return database.db.search_film_with_filters()
     finally:
         conn.close()
 
 def get_films_with_filters(title=None, genre=None, actor=None, year=None, sort_by=None, sort_order="asc"):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
-        return db.search_film_with_filters(conn, title=title, genre=genre, actor=actor, year=year, sort_by=sort_by, sort_order=sort_order)
+        return database.db.search_film_with_filters(conn, title=title, genre=genre, actor=actor, year=year, sort_by=sort_by, sort_order=sort_order)
     finally:
         conn.close()
 def get_user_profile(user_id):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -80,8 +80,8 @@ def get_user_profile(user_id):
 
         if not user:
             return None
-        seen_films = db.get_films_from_users_list(conn, user_id, 3)   # просмотрено
-        planned_films = db.get_films_from_users_list(conn, user_id, 1)  # запланировано
+        seen_films = database.db.get_films_from_users_list(conn, user_id, 3)   # просмотрено
+        planned_films = database.db.get_films_from_users_list(conn, user_id, 1)  # запланировано
 
         return {
             "id": user[0],
@@ -95,7 +95,7 @@ def get_user_profile(user_id):
     finally:
         conn.close()
 def change_user_avatar(user_id, avatar_url):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute("""
@@ -104,16 +104,16 @@ def change_user_avatar(user_id, avatar_url):
                 WHERE id = %s;
             """, (avatar_url, user_id))
             conn.commit()
-        user_profile = db.get_users_profile(conn, user_id)
+        user_profile = database.db.get_users_profile(conn, user_id)
         if user_profile:
             return user_profile['avatar_url']
         return None
     finally:
         conn.close()
 def update_user_profile(user_id, username=None, password=None, avatar=None):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
-        user = db.change_users_profile(
+        user = database.db.change_users_profile(
             conn,
             user_id,
             user_name=username,
@@ -133,12 +133,12 @@ def update_user_profile(user_id, username=None, password=None, avatar=None):
     finally:
         conn.close()
 def get_all_movies_with_details():
-    conn = db.get_connection()
-    films_basic = db.get_all_films(conn)
+    conn = database.db.get_connection()
+    films_basic = database.db.get_all_films(conn)
     all_movies = []
 
 
-    with conn.cursor(cursor_factory=db.RealDictCursor) as cur:
+    with conn.cursor(cursor_factory=database.db.RealDictCursor) as cur:
         for film in films_basic:
             movie_id = film['movie_id']
             query = """SELECT movie_id, title, poster_link, release_year
@@ -152,7 +152,7 @@ def get_all_movies_with_details():
     return all_movies
 
 def add_movie_to_user_list(user_id, movie_id, status):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
         status_map = {
             "seen": 3,
@@ -163,7 +163,7 @@ def add_movie_to_user_list(user_id, movie_id, status):
         if status_id is None:
             raise ValueError("Неверный статус")
 
-        return db.add_film_to_list(conn, user_id, movie_id, status_id)
+        return database.db.add_film_to_list(conn, user_id, movie_id, status_id)
 
     finally:
         conn.close()
@@ -276,12 +276,12 @@ def add_movie(conn, title, overview, release_year, poster_link, genres=None):
 def get_movies_by_genre_front(genre_name):
 
 
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
-        films = db.search_film_with_filters(conn, genre=genre_name)
+        films = database.db.search_film_with_filters(conn, genre=genre_name)
         result = []
         for film in films:
-            info = db.get_film_info(conn, film["movie_id"])
+            info = database.db.get_film_info(conn, film["movie_id"])
             result.append({
                 "id": film["movie_id"],
                 "title": film["title"],
@@ -293,7 +293,7 @@ def get_movies_by_genre_front(genre_name):
 ''' Возвращает все фильмы, отсортированные по алфавиту.
     ascending=True -> A→Z, ascending=False -> Z→A '''
 def get_all_movies_sorted_by_title(ascending=True):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
         order_direction = "ASC" if ascending else "DESC"
         with conn.cursor(cursor_factory=db.RealDictCursor) as cur:
@@ -310,7 +310,7 @@ def get_all_movies_sorted_by_title(ascending=True):
 
 def get_all_movies_newest_first():
 
-    conn = db.get_connection()
+    conn = database.db.get_connection()
     try:
         with conn.cursor(cursor_factory=db.RealDictCursor) as cur:
             cur.execute("""
@@ -339,10 +339,10 @@ def get_films_by_year(conn, year):
 #добавление комментов
 
 def add_comment(user_id, movie_id, text):
-    conn = db.get_connection()
+    conn = database.db.get_connection()
 
     try:
-        comment = db.write_comment_on_film(conn, user_id, movie_id, text)
+        comment = database.db.write_comment_on_film(conn, user_id, movie_id, text)
 
         return {
             "id": comment["id"],
