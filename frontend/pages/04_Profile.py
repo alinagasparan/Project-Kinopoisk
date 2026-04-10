@@ -1,6 +1,7 @@
 import streamlit as st
 from assets.styles import apply_styles  
-from backend.main1 import get_user_profile, change_user_avatar, add_movie 
+from components.movie_cards import render_movie_card
+from backend.main1 import get_user_profile, change_user_avatar, add_movie, get_all_movies_with_details
 
 if "user" not in st.session_state:
     st.warning("Сначала войдите!")
@@ -53,19 +54,40 @@ if user_info:
 
     tab_seen, tab_plan = st.tabs(["✅ Просмотрено", "⏳ Запланировано"])
 
+    with st.spinner("Загружаем постеры ваших фильмов..."):
+        all_movies_data = get_all_movies_with_details()
+        poster_map = {}
+        for m in all_movies_data:
+            mid = m.get('movie_id') or m.get('id')
+            if mid:
+                poster_map[mid] = m.get('poster_link') or m.get('poster') or ""
+
+    def render_custom_grid(user_movies, empty_msg):
+        if not user_movies:
+            st.info(empty_msg)
+            return
+
+        cols_per_row = 5
+        for i in range(0, len(user_movies), cols_per_row):
+            cols = st.columns(cols_per_row)
+            for j in range(cols_per_row):
+                if i + j < len(user_movies):
+                    film = user_movies[i + j]
+                    m_id = film['movie_id']
+                    img_url = poster_map.get(m_id) or ""
+                    
+                    with cols[j]:
+                        render_movie_card(
+                            movie_id=m_id,
+                            title=film['title'],
+                            img_url=img_url
+                        )
+
     with tab_seen:
-        if user_info['seen']:
-            for film in user_info['seen']:
-                st.markdown(f"**{film['title']}**")
-        else:
-            st.info("Вы еще не отметили ни одного просмотренного фильма.")
+        render_custom_grid(user_info['seen'], "Вы еще не отметили ни одного просмотренного фильма.")
 
     with tab_plan:
-        if user_info['planned']:
-            for film in user_info['planned']:
-                st.markdown(f"**{film['title']}**")
-        else:
-            st.info("Ваш список 'Запланировано' пока пуст.")
+        render_custom_grid(user_info['planned'], "Ваш список 'Запланировано' пока пуст.")
 
     # Блок админа
     if user_info['username'].lower() == "admin":

@@ -28,7 +28,7 @@ with st.container(key="auth_form"):
                 st.session_state.is_logged_in = True
                 st.session_state.user = user
                 st.success(f"Добро пожаловать, {user['username']}!")
-                st.switch_page("pages/01_Home.py")
+                st.switch_page("pages/04_Profile.py")
             else:
                 st.error("Неверный ник или пароль")
     else:
@@ -47,7 +47,11 @@ with st.container(key="auth_form"):
                     if user is None or user['id'] is None:
                         st.error("Этот никнейм уже занят. Попробуйте другой.")
                     else:
+                        st.session_state.is_logged_in = True
+                        st.session_state.user = user
                         st.success(f"Аккаунт создан! ID: {user['id']}")
+                        st.switch_page("pages/04_Profile.py")
+
                 except Exception as e:
                     st.error(f"Ошибка: {e}")
 

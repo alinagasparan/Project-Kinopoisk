@@ -1,5 +1,5 @@
 import streamlit as st
-from backend.main1 import get_all_movies_with_details,  get_movies_by_genre_front
+from backend.main1 import get_all_movies_with_details,  get_movies_by_genre_front, get_films_by_year
 from components.movie_cards import render_movie_card
 from assets.styles import apply_styles, filter_panel
 
@@ -33,13 +33,12 @@ with st.container(key="catalog"):
             st.rerun()
 
     with st.spinner("Загрузка фильмов..."):
-        if not selected_genres:
-            # Если жанры не выбраны — тянем всё из базы
-            raw_data = get_all_movies_with_details()
-        else:
-            # Если жанры выбраны — ищем пересечение (фильмы, подходящие под ВСЕ жанры)
+        all_filters_results = []
+        movie_map = {}
+
+        # Фильтр по жанрам
+        if selected_genres:
             genre_sets = []
-            movie_map = {}
             for g in selected_genres:
                 films = get_movies_by_genre_front(g) 
                 current_ids = set()
@@ -50,10 +49,30 @@ with st.container(key="catalog"):
                     movie_map[mid] = f_norm
                 genre_sets.append(current_ids)
             
-            common_ids = set.intersection(*genre_sets) if genre_sets else set()
-            raw_data = [movie_map[mid] for mid in common_ids]
+            if genre_sets:
+                # Находим фильмы, которые подходят под ВСЕ выбранные жанры
+                common_genre_ids = set.intersection(*genre_sets)
+                all_filters_results.append(common_genre_ids)
 
-    # Нормализуем результат
+        # фильтр по году
+        if selected_year and selected_year != "Любой":
+            year_films = get_films_by_year(selected_year)
+            year_ids = set()
+            for f in year_films:
+                f_norm = normalize(f)
+                mid = f_norm["id"]
+                year_ids.add(mid)
+                movie_map[mid] = f_norm
+            all_filters_results.append(year_ids)
+
+        if not all_filters_results:
+            # Если ни один фильтр не выбран — берем всё
+            raw_data = get_all_movies_with_details()
+        else:
+            # Находим пересечение ЖАНРОВ и ГОДА
+            final_ids = set.intersection(*all_filters_results)
+            raw_data = [movie_map[mid] for mid in final_ids]
+
     movies = [normalize(f) for f in (raw_data or [])]
 
     if sort_selection == "По алфавиту":
